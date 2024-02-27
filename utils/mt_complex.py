@@ -4,6 +4,7 @@
 """
 
 import numpy as np
+import itertools
 
 ## COMPLEX math tools - Complex Laplacian ##
 
@@ -25,7 +26,7 @@ def gen_compnts_matrix(n, Z, mu_matrix):
 
 """
 - Generate the weights accordangly to a desired formation shape
-  and the incidence matrix -
+  and incidence matrix -
   REF: https://ieeexplore.ieee.org/abstract/document/6750042
   (p1 is a "random" constant)
 """
@@ -34,12 +35,16 @@ def gen_weights(p_star, N_list, p1=(1+2j)):
     W = np.zeros((n,n), dtype=complex)
 
     for i in range(n):
-        # compute the weights of the first two neightborns
-        j,k = N_list[i][0:2]
-        w_vector = p1*np.array([p_star[i] - p_star[k], 
-                                p_star[j] - p_star[i]], dtype=complex)
+        neigh_edge_tuples = list(itertools.combinations(N_list[i] ,2))
 
-        W[i,j], W[i,k] = w_vector[0], w_vector[1]
+        w_vector = np.zeros(n, dtype=complex)
+        for edge in neigh_edge_tuples:
+            # compute the weights two by two neightborns
+            j,k = edge
+            w_vector[j] =  w_vector[j] + p1*(p_star[i] - p_star[k])
+            w_vector[k] =  w_vector[k] + p1*(p_star[j] - p_star[i])
+
+        W[i,:] = w_vector
 
     return W
 

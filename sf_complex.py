@@ -85,7 +85,7 @@ class sim_frame_complex:
         # Stack velocity vector
         vf = (vx + vy*(1j))*np.ones(self.n) + a*self.p_star + omega*self.p_star*(1j)
 
-        # Matrix of the motion marameters mu_ij 
+        # Matrix of motion marameters mu_ij 
         mu_matrix = np.zeros((self.n,len(self.Z)), dtype=complex)
         for i in range(self.n):
             mu_i = np.zeros(len(self.Z), dtype=complex)

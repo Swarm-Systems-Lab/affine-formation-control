@@ -61,28 +61,28 @@ class sim_frame_affine:
         self.kappa = kappa
 
         if K is None:
-            self.K = np.eye(n)
+            self.K = np.kron(np.eye(self.n),np.eye(self.m))
         else:
-            self.K = K
-        self.K_inv = LA.inv(K)
+            self.K = np.kron(K,np.eye(self.m))
+        self.K_inv = LA.inv(self.K)
         
         # Generate all the neighbors sets Ni
         self.Ni_list = []
         for i in range(n):
             self.Ni_list.append(gen_Ni(i,n,self.E))
 
-        # Generating weights and laplacian matrix
+        # ---- Generating weights and Laplacian matrix -
         self.B = gen_inc_matrix(self.n, self.Z)
         
-        # Shiyu Zhao algorithm
+        # - Shiyu Zhao algorithm
         self.W = gen_weights_r(self.p_star, self.B, self.m)
         self.L = np.kron(self.B@self.W@self.B.T, np.eye(self.m))
         
-        # As in C^1
+        # - Lin C^1 algorithm but in R^2
         # self.W = gen_weights_rm(self.p_star, self.Ni_list)
         # self.L = gen_laplacian(self.n, self.m, self.W, self.Ni_list)
 
-        # ---- Debugging print -
+        # - Debugging print
         if self.debug:
             with np.printoptions(precision=2, suppress=True):
                 print("W {:s} = \n".format(str(self.W.shape)), self.W)
@@ -91,8 +91,16 @@ class sim_frame_affine:
             with np.printoptions(precision=8, suppress=True):
                 for i,eigen in enumerate(LA.eig(self.L)[0]):
                     print("lambda_{:d} = {:f}".format(i,eigen))
-        # ----
-                    
+        # --------------------------------------------------------
+
+        # Initialise the components matrix and the modified laplacian
+        self.L_mod = np.copy(self.L)
+
+        # Generating the simulator
+        self.simulator = simulator(self.p0, self.dt)
+    
+    """
+    """
     def check_eigen_vectors(self):
         R45 = rot_transf_from_ang(self.n, np.pi/4)
         Sc = np.kron(np.eye(self.n), 4*np.eye(self.m))
@@ -123,3 +131,79 @@ class sim_frame_affine:
         plt.plot(test[:,0], test[:,1], "ob")
 
         plt.grid(True)
+    
+    """
+    """
+    def set_velocity(self, vx, vy, a, omega, sx, sy):
+        # Generate the stack velocity vector (n,m)
+        S = np.kron(np.eye(self.n), np.eye(self.m))
+        R = rot_transf_from_ang(self.n, omega)
+        Sx = sh_transf_x(self.n,sx)
+        Sy = sh_transf_x(self.n,sy)
+        
+        vt = np.kron(np.ones(self.n), [vx,vy])
+        vf = vt + (a*S + R + Sx + Sy) @ self.p_star
+        vf = vf.reshape(self.n, self.m)
+
+        # Generate the matrix of motion marameters mu_ij \in R^m
+        ps = self.p_star.reshape(self.n,self.m)
+        mu_matrix = np.zeros((self.n*self.m,len(self.Z)*self.m))
+        for i in range(self.n):
+            mu_i = np.zeros((self.m,len(self.Z)*self.m))
+            j = self.Ni_list[i][0]
+            mu_i[:, j*self.m:(j+1)*self.m] = vf[i,:][:,None] @ (ps[i,:] - ps[j,:])[:,None].T # TODO
+            mu_matrix[i*self.m:(i+1)*self.m,:] = mu_i
+        
+        if self.debug:
+            with np.printoptions(precision=2, suppress=True):
+                print(mu_matrix)
+                
+                print("v_i:\n",vf[0,:][:,None])
+                print("z_ij:\n",(ps[0,:] - ps[1,:])[:,None])
+                print("m_ij:\n",mu_matrix[0*self.m:(0+1)*self.m,1*self.m:(1+1)*self.m])
+                print("prod:\n", mu_matrix[0*self.m:(0+1)*self.m,1*self.m:(1+1)*self.m] @ (ps[0,:] - ps[1,:])[:,None])
+                print("vf_i:\n", vf[0,:]) 
+                print("vf_stack:\n",vf)
+
+    """
+    """
+    def numerical_simulation(self):
+        # Integration steps
+        its = int(self.tf/self.dt)
+
+        # Init data arrays
+        pdata = np.empty([its,self.n,self.m])
+        
+        # Numerical simulation
+        for i in tqdm(range(its)):
+            pdata[i,:,:] = self.simulator.p.reshape(self.n,self.m)
+            # Robots simulator euler step integration
+            self.simulator.int_euler(self.h, self.K, self.L_mod)
+
+        self.data["p"] = pdata
+
+    def plot(self):
+        # Extract data
+        pdata = self.data["p"]
+
+        # Figure init and configuration
+        fig = plt.figure()
+        ax = fig.subplots()
+
+        ax.grid(True)
+        ax.set_xlim([-20,20])
+        ax.set_ylim([-20,20])
+
+        # Plotting
+        colors = ["k", "b", "r", "g"]
+        for i in range(self.n):
+            ax.plot(pdata[:,i,0], pdata[:,i,1], c=colors[i], lw=0.8)
+            ax.plot(pdata[0,i,0], pdata[0,i,1], "x", c=colors[i])
+            ax.plot(pdata[-1,i,0], pdata[-1,i,1], ".", c=colors[i])
+
+        for edge in self.Z:
+            i,j = np.array(edge)-1
+            ax.plot([pdata[-1,i,0], pdata[-1,j,0]], 
+                    [pdata[-1,i,1], pdata[-1,j,1]], "k--", lw=0.8)
+
+        plt.show()
