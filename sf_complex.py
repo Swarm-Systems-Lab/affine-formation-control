@@ -71,7 +71,7 @@ class sim_frame_complex:
             print("\nL@1_n = \n", self.L @ (np.ones((n,1))))
             print("\nL@p^star = \n", self.L @ self.p_star[:,None])
             print("\nL eigen_values:")
-            for i,eigen in enumerate(LA.eig(self.L)[0]):
+            for i,eigen in enumerate(LA.eig(-self.L)[0]):
                 print("lambda_{:d} = {:f}".format(i,eigen))
         # ----
         
@@ -86,9 +86,9 @@ class sim_frame_complex:
         vf = (vx + vy*(1j))*np.ones(self.n) + a*self.p_star + omega*self.p_star*(1j)
 
         # Matrix of motion marameters mu_ij 
-        mu_matrix = np.zeros((self.n,len(self.Z)), dtype=complex)
+        mu_matrix = np.zeros((self.n,self.n), dtype=complex)
         for i in range(self.n):
-            mu_i = np.zeros(len(self.Z), dtype=complex)
+            mu_i = np.zeros(self.n, dtype=complex)
             j_neig = self.Ni_list[i][0]
             mu_i[j_neig] = vf[i]/(self.p_star[i] - self.p_star[j_neig])
             mu_matrix[i,:] = mu_i
@@ -102,7 +102,7 @@ class sim_frame_complex:
             print("\nL@1_n = \n", self.L @ (np.ones((self.n,1))))
             print("\nL@v_f = \n", self.L @ vf[:,None]) #TODO: thm. 3
             print("\nL eigen_values:")
-            for i,eigen in enumerate(LA.eig(self.L_mod)[0]):
+            for i,eigen in enumerate(LA.eig(-self.L_mod)[0]):
                 print("lambda_{:d} = {:f}".format(i,eigen))
 
     def numerical_simulation(self):
