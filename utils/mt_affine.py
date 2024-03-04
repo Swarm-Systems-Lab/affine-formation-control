@@ -26,6 +26,22 @@ def sh_transf_y(n,t):
 ## AFFINE FORMATIONS math tools - Complex Laplacian ##
 
 """
+- Generate the components matrix M from the ordered edges set Z 
+  and mu_ij -
+"""
+def gen_compnts_matrix(n, m, Z, mu_matrix):
+    M = np.zeros((n*m,len(Z)*m))
+    for i in range(n):
+        k = 0
+        for edge in Z: # edge = (Z_k^head, Z_k^tail)
+            if i+1 == edge[1]: # if tail
+                M[i*m:(i+1)*m,k*m:(k+1)*m] = mu_matrix[i*m:(i+1)*m, (edge[0]-1)*m:(edge[0])*m]  # mu_{i Z_k^head}
+            elif i+1 == edge[0]: # if head
+                M[i*m:(i+1)*m,k*m:(k+1)*m] = -mu_matrix[i*m:(i+1)*m, (edge[1]-1)*m:(edge[1])*m] # mu_{i Z_k^tail}
+            k = k+1
+    return M
+
+"""
 - Generate the weights accordangly to a desired formation shape
   and incidence matrix or neightbors set (Lin method but in R^m) -
   (p1 is a "random" constant)

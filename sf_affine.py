@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 from utils.mt_cmn import gen_edges_set, gen_Ni, gen_inc_matrix
-from utils.mt_affine import rot_transf_from_ang, sh_transf_x, sh_transf_y
-from utils.mt_affine import gen_weights_rm, gen_weights_r, gen_laplacian
+from utils.mt_affine import rot_transf_from_ang, sh_transf_x, sh_transf_y, rot_mat
+from utils.mt_affine import gen_weights_rm, gen_weights_r, gen_compnts_matrix
 from utils.simulator import simulator
 
 def check_p_dim(p, var_name=""):
@@ -34,7 +34,7 @@ def build_B(list_edges, n):
 """
 class sim_frame_affine:
     def __init__(self, n, Z, p_star, p0, tf, dt = 0.001,
-                 h = 1, K = None, kappa = 1,
+                 h = 1, K = None, kappa = 0.1,
                  debug = False):
         
         self.data = {"p": None}
@@ -73,6 +73,7 @@ class sim_frame_affine:
 
         # ---- Generating weights and Laplacian matrix -
         self.B = gen_inc_matrix(self.n, self.Z)
+        self.B_bar_T = np.kron(self.B.T, np.eye(self.m))
         
         # - Shiyu Zhao algorithm
         self.W = gen_weights_r(self.p_star, self.B, self.m)
@@ -115,7 +116,11 @@ class sim_frame_affine:
             print("{:<15} = ".format("L@(4*I_mn)@p^*"), self.L @ Sc @ self.p_star)
             print("{:<15} = ".format("L@Shx@p^*"), self.L @ Shx @ self.p_star)
             print("{:<15} = ".format("L@Shy@p^*"), self.L @ Shy @ self.p_star)
-            print("{:<15} = ".format("L@A@p^*"), self.L @ A @ self.p_star)
+            print(" ------------ ")
+            print("{:<15} = ".format("(Shy@p^*)^T@(Shx@p^*)"), 
+                  (Shy @ self.p_star).T @ (Shx @ self.p_star))
+            print("{:<15} = ".format("(R45@p^*)^T@(Shx@p^*)"), 
+                  (R45 @ self.p_star).T @ (Shx @ self.p_star))
 
         test = self.p_star
         test = test.reshape(self.n, self.m)
@@ -124,12 +129,13 @@ class sim_frame_affine:
 
         test = Shx @ self.p_star
         test = test.reshape(self.n, self.m)
-        plt.plot(test[:,0], test[:,1], "or")
+        plt.plot(test[:,0], test[:,1], "or", label=r"$\bar S_x \times p^*$")
 
         test = Shy @ self.p_star
         test = test.reshape(self.n, self.m)
-        plt.plot(test[:,0], test[:,1], "ob")
+        plt.plot(test[:,0], test[:,1], "ob", label=r"$\bar S_y \times p^*$")
 
+        plt.legend()
         plt.grid(True)
     
     """
@@ -137,33 +143,50 @@ class sim_frame_affine:
     def set_velocity(self, vx, vy, a, omega, sx, sy):
         # Generate the stack velocity vector (n,m)
         S = np.kron(np.eye(self.n), np.eye(self.m))
-        R = rot_transf_from_ang(self.n, omega)
-        Sx = sh_transf_x(self.n,sx)
-        Sy = sh_transf_x(self.n,sy)
+        R, Sx, Sy, = 0*S, 0*S, 0*S
+        if abs(omega)>0:
+            R = rot_transf_from_ang(self.n, omega)
+        if abs(sx)>0:
+            Sx = sh_transf_x(self.n,sx)
+        if abs(sy)>0:
+            Sy = sh_transf_x(self.n,sy)
         
         vt = np.kron(np.ones(self.n), [vx,vy])
         vf = vt + (a*S + R + Sx + Sy) @ self.p_star
         vf = vf.reshape(self.n, self.m)
 
         # Generate the matrix of motion marameters mu_ij \in R^m
-        ps = self.p_star.reshape(self.n,self.m)
+        ps = self.p_star.reshape(self.n, self.m)
+        vf_complex = vf[:,0] + (1j)*vf[:,1]
+        ps_complex = ps[:,0] + (1j)*ps[:,1]
+
         mu_matrix = np.zeros((self.n*self.m,len(self.Z)*self.m))
         for i in range(self.n):
-            mu_i = np.zeros((self.m,len(self.Z)*self.m))
             j = self.Ni_list[i][0]
-            mu_i[:, j*self.m:(j+1)*self.m] = vf[i,:][:,None] @ (ps[i,:] - ps[j,:])[:,None].T # TODO
+            mu_i_complex = vf_complex[i]/(ps_complex[i] - ps_complex[j])
+
+            mu_i = np.zeros((self.m,len(self.Z)*self.m))
+            mu_i[:, j*self.m:(j+1)*self.m] = rot_mat(mu_i_complex)
             mu_matrix[i*self.m:(i+1)*self.m,:] = mu_i
         
         if self.debug:
             with np.printoptions(precision=2, suppress=True):
                 print(mu_matrix)
                 
-                print("v_i:\n",vf[0,:][:,None])
-                print("z_ij:\n",(ps[0,:] - ps[1,:])[:,None])
-                print("m_ij:\n",mu_matrix[0*self.m:(0+1)*self.m,1*self.m:(1+1)*self.m])
+                # print("v_i:\n",vf[0,:][:,None])
+                # print("z_ij:\n",(ps[0,:] - ps[1,:])[:,None])
+                # print("m_ij:\n",mu_matrix[0*self.m:(0+1)*self.m,1*self.m:(1+1)*self.m])
                 print("prod:\n", mu_matrix[0*self.m:(0+1)*self.m,1*self.m:(1+1)*self.m] @ (ps[0,:] - ps[1,:])[:,None])
                 print("vf_i:\n", vf[0,:]) 
                 print("vf_stack:\n",vf)
+
+        M = gen_compnts_matrix(self.n, self.m, self.Z, mu_matrix)
+        print("M", M.shape, "B.T", self.B.T.shape, "K_inv", self.K_inv.shape)
+        with np.printoptions(precision=6, suppress=True):
+            print(M)
+            print(M@self.B_bar_T)
+        #self.L_mod = self.L - self.kappa/self.h * self.K_inv @ M @ self.B_bar.T
+        self.L_mod = self.L - self.kappa/self.h * M @ self.B_bar_T
 
     """
     """
@@ -199,11 +222,12 @@ class sim_frame_affine:
         for i in range(self.n):
             ax.plot(pdata[:,i,0], pdata[:,i,1], c=colors[i], lw=0.8)
             ax.plot(pdata[0,i,0], pdata[0,i,1], "x", c=colors[i])
-            ax.plot(pdata[-1,i,0], pdata[-1,i,1], ".", c=colors[i])
+            ax.plot(pdata[-1,i,0], pdata[-1,i,1], ".", c=colors[i], label=i)
 
         for edge in self.Z:
             i,j = np.array(edge)-1
             ax.plot([pdata[-1,i,0], pdata[-1,j,0]], 
                     [pdata[-1,i,1], pdata[-1,j,1]], "k--", lw=0.8)
-
+            
+        plt.legend()
         plt.show()
