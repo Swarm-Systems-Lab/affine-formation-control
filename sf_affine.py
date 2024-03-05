@@ -205,11 +205,11 @@ class sim_frame_affine:
                 for i,eigen in enumerate(LA.eig(-self.L_mod)[0]):
                     L_eig = (-self.L_mod - np.eye(self.n*self.m)*eigen)
                     print(" ---- ", eigen)
-                    print("{:<15} = ".format("(L - I*lambda)@1_n^bar"), L_eig @ np.ones(self.n*self.m))
-                    print("{:<15} = ".format("(L - I*lambda)@p^*"), L_eig @ self.p_star)
-                    print("{:<15} = ".format("(L - I*lambda)@R(pi/4)@p^*"), L_eig @ R45 @ self.p_star)
-                    print("{:<15} = ".format("(L - I*lambda)@Shx@p^*"), L_eig @ Shx @ self.p_star)
-                    print("{:<15} = ".format("(L - I*lambda)@Shy@p^*"), L_eig @ Shy @ self.p_star)
+                    print("{:<15} = \n".format("(L - I*lambda)@1_n^bar"), L_eig @ np.ones(self.n*self.m))
+                    print("{:<15} = \n".format("(L - I*lambda)@p^*"), L_eig @ self.p_star)
+                    print("{:<15} = \n".format("(L - I*lambda)@R(pi/4)@p^*"), L_eig @ R45 @ self.p_star)
+                    # print("{:<15} = \n".format("(L - I*lambda)@Shx@p^*"), L_eig @ Shx @ self.p_star)
+                    # print("{:<15} = \n".format("(L - I*lambda)@Shy@p^*"), L_eig @ Shy @ self.p_star)
 
     """
     """
