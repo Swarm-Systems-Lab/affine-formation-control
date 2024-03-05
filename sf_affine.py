@@ -213,6 +213,17 @@ class sim_frame_affine:
 
     """
     """
+    def set_manual_mu_test(self, mu_matrix1, mu_matrix2, check_eigen_vec = False):
+        M1 = gen_compnts_matrix(self.n, self.m, self.Z, mu_matrix1)
+        M2 = gen_compnts_matrix(self.n, self.m, self.Z, mu_matrix2)
+        M = gen_compnts_matrix(self.n, self.m, self.Z, mu_matrix1 + mu_matrix2)
+        with np.printoptions(precision=3, suppress=True):
+            print("---\n",M@self.B_bar_T@M1@self.B_bar_T@self.p_star)
+            print("---\n",M1@self.B_bar_T@M1@self.B_bar_T@self.p_star)
+            print("---\n",M2@self.B_bar_T@M2@self.B_bar_T@self.p_star)
+
+    """
+    """
     def numerical_simulation(self):
         # Integration steps
         its = int(self.tf/self.dt)
