@@ -88,6 +88,7 @@ class sim_frame_affine:
             with np.printoptions(precision=2, suppress=True):
                 print("W {:s} = \n".format(str(self.W.shape)), self.W)
                 print("L {:s} = \n".format(str(self.L.shape)), self.L)
+                print("bar B^T {:s} = \n".format(str(self.B_bar_T.shape)), self.B_bar_T)
             print(" --------- Eigen values")
             with np.printoptions(precision=8, suppress=True):
                 for i,eigen in enumerate(LA.eig(-self.L)[0]):
@@ -184,14 +185,15 @@ class sim_frame_affine:
     """
     """
     def set_manual_mu(self, mu_matrix, check_eigen_vec = False):
-        M = gen_compnts_matrix(self.n, self.m, self.Z, mu_matrix)
-        self.L_mod = self.L - self.kappa/self.h * self.K_inv @ M @ self.B_bar_T
+        self.M = gen_compnts_matrix(self.n, self.m, self.Z, mu_matrix)
+        self.L_mod = self.L - self.kappa/self.h * self.K_inv @ self.M @ self.B_bar_T
 
         if self.debug:
             with np.printoptions(precision=2, suppress=True):
-                print("M", M.shape, "B.T", self.B.T.shape, "K_inv", self.K_inv.shape)
+                print("M", self.M.shape, "B.T", self.B.T.shape, "K_inv", self.K_inv.shape)
                 print("mu_ij matrix:\n", mu_matrix)
-                print("M^bar@B^T^bar@p_star", M@self.B_bar_T@self.p_star)
+                print("M:\n", mu_matrix)
+                print("M^bar@B^T^bar@p_star", self.M@self.B_bar_T@self.p_star)
             print(" --------- Eigen values L_mod")
             with np.printoptions(precision=8, suppress=True):
                 for i,eigen in enumerate(LA.eig(-self.L_mod)[0]):
@@ -204,23 +206,12 @@ class sim_frame_affine:
             with np.printoptions(precision=4, suppress=True):
                 for i,eigen in enumerate(LA.eig(-self.L_mod)[0]):
                     L_eig = (-self.L_mod - np.eye(self.n*self.m)*eigen)
-                    print(" ---- ", eigen)
+                    # print(" ---- ", eigen)
                     # print("{:<15} = \n".format("(L - I*lambda)@1_n^bar"), L_eig @ np.ones(self.n*self.m))
                     # print("{:<15} = \n".format("(L - I*lambda)@p^*"), L_eig @ self.p_star)
                     # print("{:<15} = \n".format("(L - I*lambda)@R(pi/4)@p^*"), L_eig @ R45 @ self.p_star)
                     # print("{:<15} = \n".format("(L - I*lambda)@Shx@p^*"), L_eig @ Shx @ self.p_star)
                     # print("{:<15} = \n".format("(L - I*lambda)@Shy@p^*"), L_eig @ Shy @ self.p_star)
-
-    """
-    """
-    def set_manual_mu_test(self, mu_matrix1, mu_matrix2, check_eigen_vec = False):
-        M1 = gen_compnts_matrix(self.n, self.m, self.Z, mu_matrix1)
-        M2 = gen_compnts_matrix(self.n, self.m, self.Z, mu_matrix2)
-        M = gen_compnts_matrix(self.n, self.m, self.Z, mu_matrix1 + mu_matrix2)
-        with np.printoptions(precision=3, suppress=True):
-            print("---\n",M@self.B_bar_T@M1@self.B_bar_T@self.p_star)
-            print("---\n",M1@self.B_bar_T@M1@self.B_bar_T@self.p_star)
-            print("---\n",M2@self.B_bar_T@M2@self.B_bar_T@self.p_star)
 
     """
     """
@@ -236,7 +227,11 @@ class sim_frame_affine:
             pdata[i,:,:] = self.simulator.p.reshape(self.n,self.m)
             # Robots simulator euler step integration
             self.simulator.int_euler(self.h, self.K, self.L_mod)
-
+            # Test
+            # u = -self.h * self.K @ self.L @ self.simulator.p.reshape(self.n*self.m,1) + \
+            #      self.kappa * self.K_inv @ self.M @ self.B_bar_T @ self.simulator.p.reshape(self.n*self.m,1)
+            # self.simulator.p = self.simulator.p.reshape(self.n*self.m,1) + u * self.dt
+    
         self.data["p"] = pdata
 
     def plot(self):
