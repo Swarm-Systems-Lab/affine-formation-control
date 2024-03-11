@@ -68,9 +68,7 @@ class sim_frame_complex:
         if self.debug:
             print("B = \n", self.B)
             print("L = \n", self.L)
-            print("\nL@1_n = \n", self.L @ (np.ones((n,1))))
-            print("\nL@p^star = \n", self.L @ self.p_star[:,None])
-            print("\nL eigen_values:")
+            print("\nL eigenvalues:")
             for i,eigen in enumerate(LA.eig(-self.L)[0]):
                 print("lambda_{:d} = {:f}".format(i,eigen))
         # ----
@@ -80,7 +78,16 @@ class sim_frame_complex:
 
         # Generating the simulator
         self.simulator = simulator(self.p0, self.dt)
-    
+
+    def check_eigen_vectors(self):
+        with np.printoptions(precision=6, suppress=True):
+            ps = self.p_star
+            print("L@1_n = \n", self.L @ (np.ones((self.n))))
+            print("L@p^star = \n", self.L @ ps)
+            print("L@Re(p^*) = \n", self.L @ np.real(ps))
+            print("L@Im(p^*) = \n", self.L @ np.imag(ps))
+            print(" ------------ ")
+
     def set_velocity(self, vx, vy, a, omega):
         # Stack velocity vector
         vf = (vx + vy*(1j))*np.ones(self.n) + a*self.p_star + omega*self.p_star*(1j)
@@ -101,7 +108,7 @@ class sim_frame_complex:
             print("\nM = \n", M)
             print("\nL@1_n = \n", self.L @ (np.ones((self.n,1))))
             print("\nL@v_f = \n", self.L @ vf[:,None]) #TODO: thm. 3
-            print("\nL eigen_values:")
+            print("\nL eigenvalues:")
             for i,eigen in enumerate(LA.eig(-self.L_mod)[0]):
                 print("lambda_{:d} = {:f}".format(i,eigen))
 

@@ -181,7 +181,7 @@ class sim_frame_affine:
     #             print("mu_ij matrix:\n", mu_matrix)
     #             print("vf_input:\n", vf)
     #             print("M^bar@B^T^bar@p_star", M@self.B_bar_T@self.p_star)
-
+            
     """
     """
     def set_manual_mu(self, mu_matrix, check_eigen_vec = False):
@@ -194,7 +194,7 @@ class sim_frame_affine:
                 print("mu_ij matrix:\n", mu_matrix)
                 print("M:\n", mu_matrix)
                 print("M^bar@B^T^bar@p_star", self.M@self.B_bar_T@self.p_star)
-            print(" --------- Eigen values L_mod")
+            print(" --------- Eigenvalues L_mod")
             with np.printoptions(precision=8, suppress=True):
                 for i,eigen in enumerate(LA.eig(-self.L_mod)[0]):
                     print("lambda_{:d} = {:f}".format(i,eigen))
