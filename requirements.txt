@@ -3,5 +3,7 @@ IPython
 matplotlib
 numpy
 tqdm
+seaborn
+scipy
 
 picos==1.2.0
