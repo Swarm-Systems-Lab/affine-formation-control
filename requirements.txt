@@ -1,0 +1,7 @@
+## Required python packages ##
+IPython
+matplotlib
+numpy
+tqdm
+
+picos==1.2.0
