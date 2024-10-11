@@ -1,5 +1,5 @@
 """
-# Copyright (C) 2025 Jesús Bautista Villar <jesbauti20@gmail.com>
+# Copyright (C) 2024 Jesús Bautista Villar <jesbauti20@gmail.com>
 """
 
 import numpy as np
@@ -8,20 +8,9 @@ import matplotlib.pyplot as plt
 
 from tqdm import tqdm
 
-from .math.mt_cmn import gen_edges_set, gen_Ni, gen_inc_matrix
-from .math.mt_complex import gen_weights, gen_laplacian, gen_compnts_matrix
+from ..math.common import gen_edges_set, gen_Ni, gen_inc_matrix
+from ..math.complex import gen_weights, gen_laplacian, gen_compnts_matrix
 from .simulator import simulator
-
-########################################################################################
-
-
-def check_p_dim(p, var_name=""):
-    if isinstance(p, list):
-        p = np.array(p, dtype=complex)
-    if len(p.shape) != 1:
-        print("ERR: {:s} wrong dimension".format(var_name), p.shape)
-    return p
-
 
 ########################################################################################
 
@@ -52,10 +41,10 @@ class sim_frame_complex:
         self.E = gen_edges_set(Z)
 
         # Desired formation
-        self.p_star = check_p_dim(p_star, "p_star")
+        self.p_star = p_star
 
         # Initial conditions
-        self.p0 = check_p_dim(p0, "p0")
+        self.p0 = p0
         self.tf = tf
         self.dt = dt
 
@@ -175,3 +164,6 @@ class sim_frame_complex:
             )
 
         plt.show()
+
+
+# --------------------------------------------------------------------------------------

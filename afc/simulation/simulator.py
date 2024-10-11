@@ -1,5 +1,5 @@
 """
-# Copyright (C) 2025 Jesús Bautista Villar <jesbauti20@gmail.com>
+# Copyright (C) 2024 Jesús Bautista Villar <jesbauti20@gmail.com>
 """
 
 ########################################################################################
@@ -24,4 +24,5 @@ class simulator:
         return u[:, 0]
 
     def int_euler(self, h, K, L):
+        self.t = self.t + self.dt
         self.p = self.p + self.u_control(h, K, L) * self.dt

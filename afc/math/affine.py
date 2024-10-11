@@ -1,5 +1,5 @@
 """
-# Copyright (C) 2025 Jesús Bautista Villar <jesbauti20@gmail.com>
+# Copyright (C) 2024 Jesús Bautista Villar <jesbauti20@gmail.com>
 """
 
 import numpy as np
@@ -7,6 +7,8 @@ import itertools
 
 import picos as pic  # version 1.2.0 !!
 from scipy import linalg as la
+
+## -------------------------------------------------------------------------------------
 
 
 def rot_mat(z):
@@ -32,15 +34,13 @@ def sh_transf_y(n, t):
     return np.kron(np.eye(n), np.array([[1, np.sinh(t)], [0, 1]]))
 
 
-## AFFINE FORMATIONS math tools - Complex Laplacian ##
-
-"""
-- Generate the components matrix M from the ordered edges set Z 
-  and mu_ij -
-"""
+## AFFINE FORMATIONS math tools - Real Laplacian ---------------------------------------
 
 
 def gen_compnts_matrix(n, m, Z, mu_matrix):
+    """
+    Generate the components matrix M from the ordered edges set Z and mu_ij
+    """
     M = np.zeros((n * m, len(Z) * m))
     for i in range(n):
         k = 0
@@ -57,14 +57,12 @@ def gen_compnts_matrix(n, m, Z, mu_matrix):
     return M
 
 
-"""
-- Generate the weights accordangly to a desired formation shape
-  and incidence matrix or neightbors set (Lin method but in R^m) -
-  (p1 is a "random" constant)
-"""
-
-
 def gen_weights_rm(p_star, N_list, p1=1):
+    """
+    Generate the weights accordangly to a desired formation shape
+    and incidence matrix or neightbors set (Lin method but in R^m) -
+    (p1 is a "random" constant)
+    """
     m = 2
     n = int(p_star.shape[0] / m)
 
@@ -110,13 +108,11 @@ def gen_weights_rm(p_star, N_list, p1=1):
     return W_affine  # 4 deg of freedom (no shearing)
 
 
-"""
-- Generate the weights accordangly to a desired formation shape
-  and incidence matrix (Shiyun method with real weights) -
-"""
-
-
 def gen_weights_r(ps, B, m):
+    """
+    Generate the weights accordangly to a desired formation shape and incidence matrix
+    (Shiyun method with real weights)
+    """
     # Algorithm from "Affine Formation Maneuver Control of Multiagent Systems"
     # Transactions on Automatic Control 2017
     # Author: Shiyu Zhao
@@ -159,24 +155,23 @@ def gen_weights_r(ps, B, m):
     return np.diag(w)
 
 
-"""
-- Generate the Affine Laplacian matrix -
-"""
-
-
 def gen_laplacian(n, m, W, N_list):
+    """
+    Generate the Affine Laplacian matrix
+    """
     L = np.zeros((n * m, n * m))
     for i in range(n):
         N_i = N_list[i]
         for j in range(n):
             if i == j:
                 for k in N_i:
-                    L[i * m : (i + 1) * m, j * m : (j + 1) * m] = (
-                        L[i * m : (i + 1) * m, j * m : (j + 1) * m]
-                        + W[i * m : (i + 1) * m, k * m : (k + 1) * m]
-                    )
+                    lg = L[i * m : (i + 1) * m, j * m : (j + 1) * m]
+                    la = W[i * m : (i + 1) * m, k * m : (k + 1) * m]
+                    L[i * m : (i + 1) * m, j * m : (j + 1) * m] = lg + la
             elif j in N_i:
-                L[i * m : (i + 1) * m, j * m : (j + 1) * m] = -W[
-                    i * m : (i + 1) * m, j * m : (j + 1) * m
-                ]
+                la = -W[i * m : (i + 1) * m, j * m : (j + 1) * m]
+                L[i * m : (i + 1) * m, j * m : (j + 1) * m] = la
     return L
+
+
+# --------------------------------------------------------------------------------------

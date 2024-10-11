@@ -1,19 +1,17 @@
 """
-# Copyright (C) 2025 Jesús Bautista Villar <jesbauti20@gmail.com>
+# Copyright (C) 2024 Jesús Bautista Villar <jesbauti20@gmail.com>
 """
 
 import numpy as np
 import itertools
 
-## COMPLEX math tools - Complex Laplacian ##
-
-"""
-- Generate the components matrix M from the ordered edges set Z 
-  and mu_ij -
-"""
+## COMPLEX math tools - Complex Laplacian ----------------------------------------------
 
 
 def gen_compnts_matrix(n, Z, mu_matrix):
+    """
+    Generate the components matrix M from the ordered edges set Z and mu_ij
+    """
     M = np.zeros((n, len(Z)), dtype=complex)
     for i in range(n):
         k = 0
@@ -26,15 +24,12 @@ def gen_compnts_matrix(n, Z, mu_matrix):
     return M
 
 
-"""
-- Generate the weights accordangly to a desired formation shape
-  and incidence matrix -
-  REF: https://ieeexplore.ieee.org/abstract/document/6750042
-  (p1 is a "random" constant)
-"""
-
-
 def gen_weights(p_star, N_list, p1=(1 + 2j)):
+    """
+    Generate the weights accordangly to a desired formation shape and incidence matrix
+    REF: https://ieeexplore.ieee.org/abstract/document/6750042
+    (p1 is a "random" constant)
+    """
     n = len(p_star)
     W = np.zeros((n, n), dtype=complex)
 
@@ -53,12 +48,10 @@ def gen_weights(p_star, N_list, p1=(1 + 2j)):
     return W
 
 
-"""
-- Generate the Complex Laplacian matrix -
-"""
-
-
 def gen_laplacian(n, W, N_list):
+    """
+    Generate the Complex Laplacian matrix
+    """
     L = np.zeros((n, n), dtype=complex)
     for i in range(n):
         N_i = N_list[i]
@@ -68,3 +61,6 @@ def gen_laplacian(n, W, N_list):
             elif j in N_i:
                 L[i, j] = -W[i, j]
     return L
+
+
+# --------------------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 """
-# Copyright (C) 2025 Jesús Bautista Villar <jesbauti20@gmail.com>
+# Copyright (C) 2024 Jesús Bautista Villar <jesbauti20@gmail.com>
 """
 
 from . import *

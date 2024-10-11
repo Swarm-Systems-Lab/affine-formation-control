@@ -8,30 +8,32 @@ import matplotlib.pyplot as plt
 
 from tqdm import tqdm
 
-from .math.mt_cmn import gen_edges_set, gen_Ni, gen_inc_matrix
-from .math.mt_affine import rot_transf_from_ang, sh_transf_x, sh_transf_y, rot_mat
-from .math.mt_affine import gen_weights_rm, gen_weights_r, gen_compnts_matrix
+from ..math.common import gen_edges_set, gen_Ni, gen_inc_matrix
+from ..math.affine import rot_transf_from_ang, sh_transf_x, sh_transf_y, rot_mat
+from ..math.affine import gen_weights_rm, gen_weights_r, gen_compnts_matrix
 from .simulator import simulator
 
+
+def check_p_dim(p):
+    if isinstance(p, list):
+        p = np.array(p)
+    if len(p.shape) == 2:
+        p = p.flatten()
+    elif len(p.shape) != 1:
+        raise ValueError
+    return p
+
+
 ########################################################################################
 
 
-def build_B(list_edges, n):
-    B = np.zeros((n, len(list_edges)))
-    for i in range(len(list_edges)):
-        B[list_edges[i][0] - 1, i] = 1
-        B[list_edges[i][1] - 1, i] = -1
-    return B
-
-
-########################################################################################
-
-
-class sim_frame_affine_complex:
+class sim_frame_affine:
     def __init__(
         self, n, Z, p_star, p0, tf, dt=0.001, h=1, K=None, kappa=0.1, debug=False
     ):
+
         self.data = {"p": None}
+        np.random.seed(2024)
         self.debug = debug
 
         # Graph
@@ -42,30 +44,21 @@ class sim_frame_affine_complex:
         self.E = gen_edges_set(Z)
 
         # Desired formation
-        self.p_star = np.array(p_star)
-        if isinstance(self.p_star[0, 0], complex):
-            self.p_star_c = self.p_star
-        else:
-            self.p_star_c = self.p_star[:, 0] + self.p_star[:, 1] * 1j
+        self.p_star = check_p_dim(p_star)
 
         # Initial conditions
+        self.p0 = check_p_dim(p0)
         self.tf = tf
         self.dt = dt
-
-        self.p0 = np.array(p0)
-        if isinstance(self.p0[0, 0], complex):
-            self.p0_c = self.p0
-        else:
-            self.p0_c = self.p0[:, 0] + self.p0[:, 1] * 1j
 
         # Controller
         self.h = h
         self.kappa = kappa
 
         if K is None:
-            self.K = np.eye(self.n)
+            self.K = np.kron(np.eye(self.n), np.eye(self.m))
         else:
-            self.K = K
+            self.K = np.kron(K, np.eye(self.m))
         self.K_inv = LA.inv(self.K)
 
         # Generate all the neighbors sets Ni
@@ -75,17 +68,22 @@ class sim_frame_affine_complex:
 
         # ---- Generating weights and Laplacian matrix -
         self.B = gen_inc_matrix(self.n, self.Z)
+        self.B_bar_T = np.kron(self.B.T, np.eye(self.m))
 
         # - Shiyu Zhao algorithm
         self.W = gen_weights_r(self.p_star, self.B, self.m)
-        self.L = self.B @ self.W @ self.B.T
+        self.L = np.kron(self.B @ self.W @ self.B.T, np.eye(self.m))
+
+        # - Lin C^1 algorithm but in R^2
+        # self.W = gen_weights_rm(self.p_star, self.Ni_list)
+        # self.L = gen_laplacian(self.n, self.m, self.W, self.Ni_list)
 
         # - Debugging print
         if self.debug:
             with np.printoptions(precision=2, suppress=True):
                 print("W {:s} = \n".format(str(self.W.shape)), self.W)
                 print("L {:s} = \n".format(str(self.L.shape)), self.L)
-            print(" --------- Eigenvalues")
+            print(" --------- Eigen values")
             with np.printoptions(precision=8, suppress=True):
                 for i, eigen in enumerate(LA.eig(-self.L)[0]):
                     print("lambda_{:d} = {:f}".format(i, eigen))
@@ -95,69 +93,71 @@ class sim_frame_affine_complex:
         self.L_mod = np.copy(self.L)
 
         # Initialise the simulator
-        self.simulator = simulator(self.p0_c, self.dt)
+        self.simulator = simulator(self.p0, self.dt)
 
     def check_eigen_vectors(self):
+        R90 = rot_transf_from_ang(self.n, np.pi / 2)
+        Sc = np.kron(np.eye(self.n), np.eye(self.m))
+        Shx = sh_transf_x(self.n, 1)
+        Shy = sh_transf_y(self.n, 1)
+
         with np.printoptions(precision=6, suppress=True):
-            print("{:<15} = ".format("L@1_n"), self.L @ np.ones(self.n))
-            print("{:<15} = ".format("L@p^*"), self.L @ self.p_star_c)
-            print("{:<15} = ".format("L@Re(p^*)"), self.L @ np.real(self.p_star_c))
-            print("{:<15} = ".format("L@Im(p^*)"), self.L @ np.imag(self.p_star_c))
+            print("{:<15} = ".format("L@1_n^bar"), self.L @ np.ones(self.n * self.m))
+            print("{:<15} = ".format("L@p^*"), self.L @ self.p_star)
+            print("{:<15} = ".format("L@(I_mn)@p^*"), self.L @ Sc @ self.p_star)
+            print("{:<15} = ".format("L@R(pi/4)@p^*"), self.L @ R90 @ self.p_star)
+            print("{:<15} = ".format("L@Shx@p^*"), self.L @ Shx @ self.p_star)
+            print("{:<15} = ".format("L@Shy@p^*"), self.L @ Shy @ self.p_star)
             print(" ------------ ")
 
-    def set_manual_mu(self, mu_matrix):
-        self.M = gen_compnts_matrix(self.n, 1, self.Z, mu_matrix)
-        self.L_mod = self.L - self.kappa / self.h * self.K_inv @ self.M @ self.B.T
+    def set_manual_mu(self, mu_matrix, debug_eigenvectors=False):
+        mu_matrix = np.kron(mu_matrix, np.eye(self.m))
+        self.M = gen_compnts_matrix(self.n, self.m, self.Z, mu_matrix)
+        self.L_mod = self.L - self.kappa / self.h * self.K_inv @ self.M @ self.B_bar_T
 
         if self.debug:
             with np.printoptions(precision=2, suppress=True):
                 print(
                     "M", self.M.shape, "B.T", self.B.T.shape, "K_inv", self.K_inv.shape
                 )
-                print("mu_ij matrix:\n", mu_matrix)
-                print("M:\n", mu_matrix)
-                print("M@B^T@p_star_c", self.M @ self.B.T @ self.p_star_c)
+                # print("mu_ij matrix:\n", mu_matrix)
+                # print("M:\n", mu_matrix)
+                print("M^bar@B^T^bar@p_star:", self.M @ self.B_bar_T @ self.p_star)
+
             print(" --------- Eigenvalues L_mod")
-            with np.printoptions(precision=8, suppress=True):
-                for i, eigen in enumerate(LA.eig(-self.h * self.L_mod)[0]):
-                    print("lambda_{:d} = {:f}".format(i, eigen))
+            with np.printoptions(precision=4, suppress=True):
+                eg = LA.eig(-self.h * self.L_mod)
+                for i in range(len(eg[0])):
+                    print("lambda_{:d} = {:f}".format(i, eg[0][i]))
+                    if debug_eigenvectors:
+                        print(eg[1][:, i])
 
     def numerical_simulation(self):
         # Integration steps
         its = int(self.tf / self.dt)
 
         # Init data arrays
-        pdata_c = np.empty([its, self.n], dtype=complex)
         pdata = np.empty([its, self.n, self.m])
-
-        # Reset the simulator
-        self.simulator.reset()
 
         # Numerical simulation
         for i in tqdm(range(its)):
-            pdata_c[i, :] = self.simulator.p
+            pdata[i, :, :] = self.simulator.p.reshape(self.n, self.m)
             # Robots simulator euler step integration
             self.simulator.int_euler(self.h, self.K, self.L_mod)
 
-        pdata[:, :, 0] = np.real(pdata_c)
-        pdata[:, :, 1] = np.imag(pdata_c)
         self.data["p"] = pdata
 
-    def plot(self, ax=None, lim=20):
+    def plot(self):
         # Extract data
         pdata = self.data["p"]
 
-        flag_newplot = False
-        if ax is None:
-            flag_newplot = True
+        # Figure init and configuration
+        fig = plt.figure()
+        ax = fig.subplots()
 
-            # Figure init and configuration
-            fig = plt.figure()
-            ax = fig.subplots()
-
-            ax.grid(True)
-            ax.set_xlim([-lim, lim])
-            ax.set_ylim([-lim, lim])
+        ax.grid(True)
+        ax.set_xlim([-20, 20])
+        ax.set_ylim([-20, 20])
 
         # Plotting
         colors = ["k", "b", "r", "g"]
@@ -175,6 +175,8 @@ class sim_frame_affine_complex:
                 lw=0.8,
             )
 
-        if flag_newplot:
-            ax.set_aspect("equal")
-            ax.legend()
+        plt.legend()
+        plt.show()
+
+
+# --------------------------------------------------------------------------------------
