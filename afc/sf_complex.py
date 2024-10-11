@@ -14,6 +14,7 @@ from .simulator import simulator
 
 ########################################################################################
 
+
 def check_p_dim(p, var_name=""):
     if isinstance(p, list):
         p = np.array(p, dtype=complex)
@@ -21,7 +22,9 @@ def check_p_dim(p, var_name=""):
         print("ERR: {:s} wrong dimension".format(var_name), p.shape)
     return p
 
+
 ########################################################################################
+
 
 class sim_frame_complex:
     def __init__(
@@ -88,7 +91,7 @@ class sim_frame_complex:
         # Initialise the components matrix and the modified laplacian
         self.L_mod = np.copy(self.L)
 
-        # Generating the simulator
+        # Initialise the simulator
         self.simulator = simulator(self.p0, self.dt)
 
     def check_eigen_vectors(self):

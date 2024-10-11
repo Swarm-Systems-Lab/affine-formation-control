@@ -15,15 +15,6 @@ from .simulator import simulator
 
 ########################################################################################
 
-def check_p_dim(p, var_name=""):
-    if isinstance(p, list):
-        p = np.array(p)
-    if len(p.shape) == 2:
-        p = p.flatten()
-    elif len(p.shape) != 1:
-        print("ERR: {:s} wrong dimension".format(var_name), p.shape)
-    return p
-
 
 def build_B(list_edges, n):
     B = np.zeros((n, len(list_edges)))
@@ -40,9 +31,7 @@ class sim_frame_affine_complex:
     def __init__(
         self, n, Z, p_star, p0, tf, dt=0.001, h=1, K=None, kappa=0.1, debug=False
     ):
-
         self.data = {"p": None}
-        np.random.seed(2024)
         self.debug = debug
 
         # Graph
@@ -53,14 +42,21 @@ class sim_frame_affine_complex:
         self.E = gen_edges_set(Z)
 
         # Desired formation
-        self.p_star = check_p_dim(p_star, "p0")
-        self.p_star_c = self.p_star[0::2] + self.p_star[1::2] * 1j
+        self.p_star = np.array(p_star)
+        if isinstance(self.p_star[0, 0], complex):
+            self.p_star_c = self.p_star
+        else:
+            self.p_star_c = self.p_star[:, 0] + self.p_star[:, 1] * 1j
 
         # Initial conditions
-        self.p0 = check_p_dim(p0, "p0")
-        self.p0_c = self.p0[0::2] + self.p0[1::2] * 1j
         self.tf = tf
         self.dt = dt
+
+        self.p0 = np.array(p0)
+        if isinstance(self.p0[0, 0], complex):
+            self.p0_c = self.p0
+        else:
+            self.p0_c = self.p0[:, 0] + self.p0[:, 1] * 1j
 
         # Controller
         self.h = h
@@ -98,11 +94,8 @@ class sim_frame_affine_complex:
         # Initialise the components matrix and the modified laplacian
         self.L_mod = np.copy(self.L)
 
-        # Generating the simulator
+        # Initialise the simulator
         self.simulator = simulator(self.p0_c, self.dt)
-
-    """
-    """
 
     def check_eigen_vectors(self):
         with np.printoptions(precision=6, suppress=True):
@@ -111,9 +104,6 @@ class sim_frame_affine_complex:
             print("{:<15} = ".format("L@Re(p^*)"), self.L @ np.real(self.p_star_c))
             print("{:<15} = ".format("L@Im(p^*)"), self.L @ np.imag(self.p_star_c))
             print(" ------------ ")
-
-    """
-    """
 
     def set_manual_mu(self, mu_matrix):
         self.M = gen_compnts_matrix(self.n, 1, self.Z, mu_matrix)
@@ -132,9 +122,6 @@ class sim_frame_affine_complex:
                 for i, eigen in enumerate(LA.eig(-self.h * self.L_mod)[0]):
                     print("lambda_{:d} = {:f}".format(i, eigen))
 
-    """
-    """
-
     def numerical_simulation(self):
         # Integration steps
         its = int(self.tf / self.dt)
@@ -142,6 +129,9 @@ class sim_frame_affine_complex:
         # Init data arrays
         pdata_c = np.empty([its, self.n], dtype=complex)
         pdata = np.empty([its, self.n, self.m])
+
+        # Reset the simulator
+        self.simulator.reset()
 
         # Numerical simulation
         for i in tqdm(range(its)):
@@ -153,17 +143,21 @@ class sim_frame_affine_complex:
         pdata[:, :, 1] = np.imag(pdata_c)
         self.data["p"] = pdata
 
-    def plot(self):
+    def plot(self, ax=None, lim=20):
         # Extract data
         pdata = self.data["p"]
 
-        # Figure init and configuration
-        fig = plt.figure()
-        ax = fig.subplots()
+        flag_newplot = False
+        if ax is None:
+            flag_newplot = True
 
-        ax.grid(True)
-        ax.set_xlim([-20, 20])
-        ax.set_ylim([-20, 20])
+            # Figure init and configuration
+            fig = plt.figure()
+            ax = fig.subplots()
+
+            ax.grid(True)
+            ax.set_xlim([-lim, lim])
+            ax.set_ylim([-lim, lim])
 
         # Plotting
         colors = ["k", "b", "r", "g"]
@@ -181,5 +175,6 @@ class sim_frame_affine_complex:
                 lw=0.8,
             )
 
-        plt.legend()
-        plt.show()
+        if flag_newplot:
+            ax.set_aspect("equal")
+            ax.legend()

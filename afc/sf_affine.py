@@ -99,7 +99,7 @@ class sim_frame_affine:
         # Initialise the components matrix and the modified laplacian
         self.L_mod = np.copy(self.L)
 
-        # Generating the simulator
+        # Initialise the simulator
         self.simulator = simulator(self.p0, self.dt)
 
     """

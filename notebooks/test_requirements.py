@@ -29,3 +29,7 @@ if module_path not in sys.path:
 from afc.sf_complex import sim_frame_complex
 from afc.sf_affine import sim_frame_affine
 from afc.sf_affine_complex import sim_frame_affine_complex
+
+# --------------------------------------------------------------------------------------
+
+print("Test successful!")
