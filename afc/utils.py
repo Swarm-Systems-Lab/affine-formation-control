@@ -3,12 +3,13 @@
 """
 
 import numpy as np
-from .simulation import sim_frame_affine_complex
+import numpy.linalg as LA
 
-## Utils -------------------------------------------------------------------------------
+from .simulators import AffineComplexSimulator
 
+## Utils ------------------------------------------------------------------------------
 
-def check_case(sim_fr: sim_frame_affine_complex, params: list[float], debug=False):
+def check_case(sim_fr: AffineComplexSimulator, params: list[float], debug=False):
     vx, vy, a, omega, hx, hy = params
 
     kappa = sim_fr.kappa
@@ -71,7 +72,7 @@ def check_case(sim_fr: sim_frame_affine_complex, params: list[float], debug=Fals
 
 
 def get_pt_parallel(
-    sim_fr: sim_frame_affine_complex, params: list[float], alphas: list[float]
+    sim_fr: AffineComplexSimulator, params: list[float], alphas: list[float]
 ):
     ## Get data
     vx, vy, a, omega, hx, hy = params
@@ -151,4 +152,4 @@ def get_pt_parallel(
         return None
 
 
-# --------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------

@@ -5,5 +5,6 @@ numpy
 tqdm
 seaborn
 scipy
+sympy
 
 picos==1.2.0

@@ -7,6 +7,16 @@ import numpy as np
 ## COMMON math tools (graphs) ----------------------------------------------------------
 
 
+def gen_projectors(basis: np.ndarray) -> list[np.ndarray, np.ndarray]:
+    """
+    Given a basis $B = \{v1, ..., vn\}$, generate its associated projector matrices
+    """
+    A = np.array([*basis]).T
+    P = A @ np.linalg.inv(A.T @ A) @ A.T
+    P_perp = np.eye(A.shape[0]) - P
+    return P, P_perp
+
+
 def gen_Ni(i, n, edges_set):
     """
     Generate the set of neightborns of i (index) from the edges set

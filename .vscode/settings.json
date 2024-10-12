@@ -4,7 +4,7 @@
             //44,
             88,
         ],
-        "editor.formatOnSave": true,
+        "editor.formatOnSave": false,
         "editor.defaultFormatter": "ms-python.black-formatter",
     },
 }
