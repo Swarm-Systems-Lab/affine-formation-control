@@ -98,8 +98,8 @@ def get_pt_parallel(
 
     # C1
     if id_case == 0:
-        gamma1 = (vx * hxw + vy * sigma1) / (l1 / kappa)
-        gamma2 = (vx * hxw + vy * sigma2) / (l2 / kappa)
+        gamma1 = (vx * hyw + vy * sigma1) / (l1 / kappa)
+        gamma2 = (vx * hyw + vy * sigma2) / (l2 / kappa)
         xl1 = gamma1 * np.ones(n) + hyw * ps_x + sigma1 * ps_y
         xl2 = gamma2 * np.ones(n) + hyw * ps_x + sigma2 * ps_y
         return (
@@ -112,15 +112,18 @@ def get_pt_parallel(
     elif id_case == 1:
         if l1 != 0:
             l = l1
-            gamma1 = (vx * hxw + vy * sigma1) / (l1 / kappa)
+            gamma1 = (vx * hyw + vy * sigma1) / (l1 / kappa)
             xl = gamma1 * np.ones(n) + hyw * ps_x + sigma1 * ps_y
         else:
             l = l2
-            gamma2 = (vx * hxw + vy * sigma2) / (l2 / kappa)
+            gamma2 = (vx * hyw + vy * sigma2) / (l2 / kappa)
             xl = gamma2 * np.ones(n) + hyw * ps_x + sigma2 * ps_y
 
-        x01 = hyw * ps_x - a * ps_y
-        x02 = (vx * hyw - vy * a) * np.ones(n)
+        x02 = hyw * ps_x - a * ps_y
+        x01 = (vx * hyw - vy * a) * np.ones(n)
+
+        x01 = kappa * x01
+
         return lambda t: a1 * x01 + a2 * (x02 + x01 * t) + a3 * xl * np.exp(l * t)
 
     # C3
@@ -134,22 +137,27 @@ def get_pt_parallel(
         elif id_case == 4:  # "C3 (vx == 0, hxw == 0)"
             y01 = 1j * (hy * np.ones(n) - vy * ps_x)
             y02 = 1j * (vy * np.ones(n) + hy * ps_x)
+        
+        y01 = kappa * y01
+        y02 = kappa * y02
+
         return lambda t: a1 * y01 * a2 * y02 + a3 * (ps + y02 * t)
 
     # C4
     elif id_case in [5, 6]:
         if id_case == 5:  # "C4 (vx != 0, hyw != 0)"
-            z01 = 1j * vx * hy * np.ones(n)
             z02 = vx * np.ones(n) + 1j * hy * ps_x
+            z01 = 1j * vx * hy * np.ones(n)
         elif id_case == 6:  # "C4 (vy != 0, hxw != 0)"
-            z01 = vy * hx * np.ones(n)
             z02 = 1j * vy * np.ones(n) + hx * ps_y
+            z01 = vy * hx * np.ones(n)
+        z02 = kappa * z02
+        z01 = kappa**2 * z01
         return (
-            lambda t: a1 * z01 + a2 * (z02 + z01 * t) + a3 * (ps + z02 * t + z01 * t**2)
+            lambda t: a1 * z01 + a2 * (z02 + z01 * t) + a3 * (ps + z02 * t + z01 * t**2/2)
         )
 
     else:
         return None
-
 
 # -------------------------------------------------------------------------------------

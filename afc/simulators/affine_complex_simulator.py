@@ -97,10 +97,10 @@ class AffineComplexSimulator(Simulator):
             self.update_data()
 
     ## Provide data to plot -----------------------------------------------------------
-    def plot(self, ax_input=None, lim=20):
+    def plot(self, ax_input=None, lim=20, alpha1=1, alpha2=1):
         xdata = np.real(self.data["x"])
         ydata = np.imag(self.data["x"])
-        plot_xy(xdata, ydata, self.Z, ax_input=ax_input, lim=lim)
+        plot_xy(xdata, ydata, self.Z, ax_input, lim, alpha1, alpha2)
             
     ## Debugging Functions ------------------------------------------------------------
     def check_W_L(self, eigenvectors=True, prec=[2, 8, 3]):
@@ -129,5 +129,9 @@ class AffineComplexSimulator(Simulator):
         print("\n -> L_mod")
         debug_eig(np.array(-self.h * self.L_mod), eigenvectors, *prec[1:])
 
+    def check_MBT(self, eigenvectors=True, prec=[2,8,3]):
+        print("\n -> (M @ B.T).H @ (M @ B.T)")
+        A = np.conj(self.M @ self.B.T).T @ (self.M @ self.B.T)
+        debug_eig(np.array(A), eigenvectors, *prec[1:])
 
 #######################################################################################
