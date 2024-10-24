@@ -1,4 +1,4 @@
-# Affine Formation Control
+# Leaderless Collective Motion in Affine Formation Control over the Complex Plane
 
 ```
 WIP
