@@ -10,62 +10,92 @@ from .simulators import AffineComplexSimulator
 ## Utils ------------------------------------------------------------------------------
 
 def check_case(sim_fr: AffineComplexSimulator, params: list[float], debug=False):
-    vx, vy, a, omega, hx, hy = params
+    vx, vy, ax, ay, omega, hx, hy = params
 
     kappa = sim_fr.kappa
-
-    # Complex conjugate eigen values
-    sigma1 = np.sqrt((hx - omega) * (hy + omega) + 0j)
-    sigma2 = -np.sqrt((hx - omega) * (hy + omega) + 0j)
-    l1 = kappa * (a + sigma1)
-    l2 = kappa * (a + sigma2)
 
     # Calculate (hx - omega) and (hy + omega)
     hxw = hx - omega
     hyw = hy + omega
 
+    # Complex conjugate eigen values
+    sigma1 =  np.sqrt(((ax - ay)/2)**2 + hxw*hyw + 0j)
+    sigma2 = -np.sqrt(((ax - ay)/2)**2 + hxw*hyw + 0j)
+    l1 = kappa * ((ax + ay)/2 + sigma1)
+    l2 = kappa * ((ax + ay)/2 + sigma2)
+
     # Check the cases
-    C1a = l1 != 0 and l2 != 0
-    C2a = l1 != 0 or l2 != 0
-    C3a = (l1 == 0 and l2 == 0) and (hxw == 0 and hyw == 0)
-    C3b = (l1 == 0 and l2 == 0) and (vy == 0 and hyw == 0)
-    C3c = (l1 == 0 and l2 == 0) and (vx == 0 and hxw == 0)
-    C4a = (l1 == 0 and l2 == 0) and (vx != 0 and hyw != 0)
-    C4b = (l1 == 0 and l2 == 0) and (vy != 0 and hxw != 0)
+    C1a = (l1 != 0 and l2 != 0) and (l1 != l2)
+    C1b = (l1 != 0 and l2 != 0) and \
+          (l1 == l2 and ax == ay and hxw == 0 and hyw == 0)
+
+    C2a = (l1 != 0 and l2 != 0) and ((l1 == l2 and ax == ay) and hxw == 0) 
+    C2b = (l1 != 0 and l2 != 0) and ((l1 == l2 and ax == ay) and hyw == 0)
+
+    C3a = ((l1 == 0 and l2 != 0) or (l2 == 0 and l1 != 0)) and \
+          (hyw*vx == ax*vy or hxw*vy == ay*vx)
+
+    C4a = ((l1 == 0 and l2 != 0) or (l2 == 0 and l1 != 0)) and \
+          (hyw*vx != ax*vy or hxw*vy != ay*vx)
+
+    C5a = (l1 == 0 and l2 == 0) and (hxw == 0 and vx == 0) and hyw != 0
+    C5b = (l1 == 0 and l2 == 0) and (hyw == 0 and vy == 0) and hxw != 0
+    C5c = (l1 == 0 and l2 == 0) and (hxw == 0 and hyw == 0 and vx != 0)
+    C5d = (l1 == 0 and l2 == 0) and (hxw == 0 and hyw == 0 and vy != 0)
+
+    C6a = (l1 == 0 and l2 == 0) and (hxw != 0 and vy != 0)
+    C6b = (l1 == 0 and l2 == 0) and (hyw != 0 and vx != 0)
+    
 
     if C1a:
-        id_case = 0  # C1
+        id_case = 0  # C1a
+    elif C1b:
+        id_case = 1  # C1b
     elif C2a:
-        id_case = 1  # C2
+        id_case = 2  # C2a
+    elif C2b:
+        id_case = 3  # C2b
     elif C3a:
-        id_case = 2  # C3
-    elif C3b:
-        id_case = 3  # C3
-    elif C3c:
         id_case = 4  # C3
     elif C4a:
         id_case = 5  # C4
-    elif C4b:
-        id_case = 6  # C4
+    elif C5a:
+        id_case = 6  # C5a
+    elif C5b:
+        id_case = 7  # C5b
+    elif C5c:
+        id_case = 8  # C5c
+    elif C5d:
+        id_case = 9  # C5d
+    elif C6a:
+        id_case = 10 # C6a
+    elif C6b:
+        id_case = 11 # C6b
     else:
         id_case = None
 
     # Print the information
     labels = [
         "C1",
-        "C2",
-        "C3 (hxw == 0 and hyw == 0)",
-        "C3 (vy == 0, hyw == 0)",
-        "C3 (vx == 0, hxw == 0)",
-        "C4 (vx != 0, hyw != 0)",
-        "C4 (vy != 0, hxw != 0)",
+        "C1 (l1 == l2 and ax == ay and hxw == 0 and hyw == 0)",
+        "C2 (hxw == 0)",
+        "C2 (hyw == 0)",
+        "C3",
+        "C4",
+        "C5 (hxw == 0 and vx == 0)",
+        "C5 (hyw == 0 and vy == 0)",
+        "C5 (hxw == 0 and hyw == 0 and vx != 0)",
+        "C5 (hxw == 0 and hyw == 0 and vy != 0)",
+        "C6 (hxw != 0 and vy != 0)",
+        "C6 (hyw != 0 and vx != 0)",
     ]
 
     if debug:
+        Av_star = np.array([[0, vx, vy], [0, ax, hyw], [0, hxw, ay]])
         print("------------- ->", labels[id_case])
         print("l+ =", l1, " | l- =", l2)
-        print("hx - w =", hxw, " | hy + w =", hyw)
-        print("vx =", vx, " | vy =", vy)
+        print("Av* =\n", Av_star)
+        print("ax*ay - hxw*hyw =", ax*ay - hxw*hyw)
         print("------------- ")
     else:
         return id_case
@@ -75,18 +105,20 @@ def get_pt_parallel(
     sim_fr: AffineComplexSimulator, params: list[float], alphas: list[float]
 ):
     ## Get data
-    vx, vy, a, omega, hx, hy = params
+    vx, vy, ax, ay, omega, hx, hy = params
 
     n = sim_fr.n
     kappa = sim_fr.kappa
 
-    sigma1 = np.sqrt((hx - omega) * (hy + omega) + 0j)
-    sigma2 = -np.sqrt((hx - omega) * (hy + omega) + 0j)
-    l1 = kappa * (a + sigma1)
-    l2 = kappa * (a + sigma2)
-
+    # Calculate (hx - omega) and (hy + omega)
     hxw = hx - omega
     hyw = hy + omega
+
+    # Complex conjugate eigen values
+    sigma1 =  np.sqrt(((ax - ay)/2)**2 + hxw*hyw + 0j)
+    sigma2 = -np.sqrt(((ax - ay)/2)**2 + hxw*hyw + 0j)
+    l1 = kappa * ((ax + ay)/2 + sigma1)
+    l2 = kappa * ((ax + ay)/2 + sigma2)
 
     ps = sim_fr.p_star_c
     ps_x = np.real(ps)
@@ -95,66 +127,126 @@ def get_pt_parallel(
     ## Calculate the eigenvectors (Prop. 2)
     id_case = check_case(sim_fr, params)
     a1, a2, a3 = alphas
-
+    
     # C1
-    if id_case == 0:
-        gamma1 = (vx * hyw + vy * sigma1) / (l1 / kappa)
-        gamma2 = (vx * hyw + vy * sigma2) / (l2 / kappa)
-        xl1 = gamma1 * np.ones(n) + hyw * ps_x + sigma1 * ps_y
-        xl2 = gamma2 * np.ones(n) + hyw * ps_x + sigma2 * ps_y
+    if id_case in [0,1]:
+        if id_case == 0:
+            c3_l1 = l1/kappa - ax
+            c3_l2 = l2/kappa - ax
+            c2_l1 = hyw
+            c2_l2 = hyw
+            gamma1 = (vx * c2_l1 + vy*c3_l1) / (l1 / kappa)
+            gamma2 = (vx * c2_l2 + vy*c3_l2) / (l2 / kappa)
+            xl1 = gamma1 * np.ones(n) + c2_l1 * ps_x + c3_l1*ps_y
+            xl2 = gamma2 * np.ones(n) + c2_l2 * ps_x + c3_l2*ps_y
+        
+        if id_case == 1:
+            xl1 = vx * np.ones(n) + (ax + ay)/2 * ps_x
+            xl2 = vy * np.ones(n) + (ax + ay)/2 * ps_y
+
         return (
             lambda t: a1 * np.ones(n)
             + a2 * xl1 * np.exp(l1 * t)
             + a3 * xl2 * np.exp(l2 * t)
+        ) 
+    
+    # C2
+    if id_case in [2,3]: # TODO: fix
+        l = l1
+        axy = (ax + ay) / 2
+
+        if id_case == 2:
+            xl_1 = kappa * (vx * np.ones(n) + axy * ps_x)
+            xl_2 = vy/hyw * np.ones(n) +  ps_x +  axy/hyw * ps_y
+
+        if id_case == 3:
+            xl_1 = kappa * (vy * np.ones(n) + axy * ps_y)
+            xl_2 = vx/hxw * np.ones(n) + axy/hxw * ps_x +  ps_y
+
+        return (
+            lambda t: a1 * np.ones(n)
+            + (a2 * xl_1 + a3 * (xl_2 + xl_1*t)) * np.exp(l * t)
         )
 
-    # C2
-    elif id_case == 1:
+    # C3
+    if id_case == 4:
         if l1 != 0:
             l = l1
-            gamma1 = (vx * hyw + vy * sigma1) / (l1 / kappa)
-            xl = gamma1 * np.ones(n) + hyw * ps_x + sigma1 * ps_y
         else:
             l = l2
-            gamma2 = (vx * hyw + vy * sigma2) / (l2 / kappa)
-            xl = gamma2 * np.ones(n) + hyw * ps_x + sigma2 * ps_y
-
-        x02 = hyw * ps_x - a * ps_y
-        x01 = (vx * hyw - vy * a) * np.ones(n)
-
-        x01 = kappa * x01
-
-        return lambda t: a1 * x01 + a2 * (x02 + x01 * t) + a3 * xl * np.exp(l * t)
-
-    # C3
-    elif id_case in [2, 3, 4]:
-        if id_case == 2:  # "C3 (hxw == 0 and hyw == 0)"
-            y01 = vy * ps_x - vy * ps_y
-            y02 = (vx + 1j * vy) * np.ones(n)
-        elif id_case == 3:  # "C3 (vy == 0, hyw == 0)"
-            y01 = hx * np.ones(n) - vx * ps_y
-            y02 = vx * np.ones(n) + hx * ps_y
-        elif id_case == 4:  # "C3 (vx == 0, hxw == 0)"
-            y01 = 1j * (hy * np.ones(n) - vy * ps_x)
-            y02 = 1j * (vy * np.ones(n) + hy * ps_x)
         
-        y01 = kappa * y01
-        y02 = kappa * y02
+        x0 = vy * ps_x - vx * ps_y
 
-        return lambda t: a1 * y01 * a2 * y02 + a3 * (ps + y02 * t)
+        c3_l = l/kappa - ax
+        gamma = (vx * hyw + vy*c3_l) / (l / kappa)
+        xl = gamma * np.ones(n) + hyw * ps_x + c3_l*ps_y
+
+        return (
+            lambda t: a1 * np.ones(n)
+            + a2 * x0 
+            + a3 * xl * np.exp(l * t)
+        )
 
     # C4
-    elif id_case in [5, 6]:
-        if id_case == 5:  # "C4 (vx != 0, hyw != 0)"
-            z02 = vx * np.ones(n) + 1j * hy * ps_x
-            z01 = 1j * vx * hy * np.ones(n)
-        elif id_case == 6:  # "C4 (vy != 0, hxw != 0)"
-            z02 = 1j * vy * np.ones(n) + hx * ps_y
-            z01 = vy * hx * np.ones(n)
-        z02 = kappa * z02
-        z01 = kappa**2 * z01
+    if id_case == 5: # TODO: Check
+        if l1 != 0:
+            l = l1
+        else:
+            l = l2
+        
+        x0_1 = kappa * (vx + 1j * vy) * np.ones(n)
+        x0_2 = hyw * ps_x - ax * ps_y
+
+        c3_l = l/kappa - ax
+        gamma = (vx * hyw + vy*c3_l) / (l / kappa)
+        xl = gamma * np.ones(n) + hyw * ps_x + c3_l*ps_y
+
         return (
-            lambda t: a1 * z01 + a2 * (z02 + z01 * t) + a3 * (ps + z02 * t + z01 * t**2/2)
+            lambda t: a1 * x0_1 
+            + a2 * (x0_2 + x0_1 * t)
+            + a3 * xl * np.exp(l * t)
+        )
+
+    # C5
+    if id_case in [6,7,8,9]:
+        if id_case == 6:
+            x0_1 = kappa * (vy * np.ones(n) + (hy + omega) * ps_x)
+            x0_2 = ps_y
+            y0 = (hy + omega) * np.ones(n) - vy * ps_x
+        if id_case == 7:
+            x0_1 = kappa * (vx * np.ones(n) + (hx - omega) * ps_y)
+            x0_2 = ps_x
+            y0 = (hx - omega) * np.ones(n) - vx * ps_y
+        if id_case == 8:
+            x0_1 = kappa * vx * np.ones(n)
+            x0_2 = (vx - vy) * ps_x + vx * ps_y
+            y0 = vy * ps_x - vx * ps_y
+        if id_case == 9:
+            x0_1 = kappa * vy * np.ones(n)
+            x0_2 = vy * ps_x + (vy - vx) * ps_y
+            y0 = vy * ps_x - vx * ps_y
+
+        return (
+            lambda t: a1 * x0_1 
+            + a2 * (x0_2 + x0_1 * t)
+            + a3 * y0
+        )
+
+    # C6
+    if id_case in [10,11]:
+        if id_case == 10:
+            x0_1 = kappa**2 * vy**2 * (hx - omega) * np.ones(n)
+            x0_2 = kappa * (vx*vy * np.ones(n) + vy * (hx - omega) * ps_y)
+            x0_3 = vy * ps_x
+        if id_case == 11:
+            x0_1 = kappa**2 * vx**2 * (hy + omega) * np.ones(n)
+            x0_2 = kappa * (vx*vy * np.ones(n) + vx * (hy + omega) * ps_x)
+            x0_3 = vx * ps_y
+
+        return (
+            lambda t: a1 * x0_1 
+            + a2 * (x0_2 + x0_1 * t)
+            + a3 * (x0_3 + x0_2 * t + x0_1 * t**2 / 2)
         )
 
     else:
