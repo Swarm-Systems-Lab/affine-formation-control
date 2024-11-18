@@ -4,10 +4,35 @@
 
 import numpy as np
 
-## COMMON math tools (graphs) ----------------------------------------------------------
+from numpy.typing import NDArray
+from typing import List, Tuple
+
+## COMMON math tools ##################################################################
+
+## General Use ------------------------------------------------------------------------
+
+def toComplex(array: NDArray):
+    """
+    2D-real numpy array to 1D-complex
+    """
+    if isinstance(array.flatten()[0], complex):
+        return array
+    else:
+        return array[:, 0] + array[:, 1] * 1j
+    
+def toReal(array: NDArray):
+    """
+    1D-complex numpy array to 2D-real  
+    """
+    if not isinstance(array.flatten()[0], complex):
+        return array
+    else:
+        return np.array([np.real(array), np.imag(array)]).T
 
 
-def gen_projectors(basis: np.ndarray) -> list[np.ndarray, np.ndarray]:
+## Graphs -----------------------------------------------------------------------------
+
+def gen_projectors(basis: NDArray) -> List[NDArray]:
     """
     Given a basis $B = \{v1, ..., vn\}$, generate its associated projector matrices
     """
@@ -17,7 +42,7 @@ def gen_projectors(basis: np.ndarray) -> list[np.ndarray, np.ndarray]:
     return P, P_perp
 
 
-def gen_Ni(i, n, edges_set):
+def gen_Ni(i: int, n: int, edges_set: List[Tuple[int]]):
     """
     Generate the set of neightborns of i (index) from the edges set
     """
@@ -28,7 +53,7 @@ def gen_Ni(i, n, edges_set):
     return N_i
 
 
-def gen_edges_set(Z):
+def gen_edges_set(Z: List[Tuple]):
     """
     Generate the edges set from Z
     """
@@ -39,7 +64,7 @@ def gen_edges_set(Z):
     return E
 
 
-def gen_inc_matrix(n, Z):
+def gen_inc_matrix(n: int, Z: List[Tuple[int]]):
     """
     Generate the incidence matrix B from the ordered edges set Z
     """
@@ -49,5 +74,4 @@ def gen_inc_matrix(n, Z):
         B[Z[i][1] - 1, i] = 1  # tail
     return B
 
-
-# --------------------------------------------------------------------------------------
+#######################################################################################

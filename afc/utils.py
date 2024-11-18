@@ -6,10 +6,19 @@ import numpy as np
 import numpy.linalg as LA
 
 from .simulators import AffineComplexSimulator
+from .math import gen_Ni
+
+from typing import List, Set
+from numpy.typing import NDArray
 
 ## Utils ------------------------------------------------------------------------------
 
-def check_case(sim_fr: AffineComplexSimulator, params: list[float], debug=False):
+def check_case(
+        sim_fr: AffineComplexSimulator, 
+        params: List[float], 
+        debug: bool =False
+    ) -> None:
+
     vx, vy, ax, ay, omega, hx, hy = params
 
     kappa = sim_fr.kappa
@@ -102,8 +111,11 @@ def check_case(sim_fr: AffineComplexSimulator, params: list[float], debug=False)
 
 
 def get_pt_parallel(
-    sim_fr: AffineComplexSimulator, params: list[float], alphas: list[float]
-):
+    sim_fr: AffineComplexSimulator, 
+    params: List[float], 
+    alphas: List[float]
+) -> NDArray:
+    
     ## Get data
     vx, vy, ax, ay, omega, hx, hy = params
 
@@ -251,5 +263,45 @@ def get_pt_parallel(
 
     else:
         return None
+
+
+def gen_MBt(
+    Z: Set[Set[int]],  # Each set contains 2 int elements (head, tail)
+    p_star: NDArray[np.complex_], # 1D array with shape n = to the number of agents
+    v_star_coords: List[complex]  # c1, c2 and c3 w.r.t. O_\Delta
+) -> NDArray:
+    
+    # Init
+    n = np.shape(p_star)[0]
+    MBt = np.zeros((n,n))
+
+    c1,c2,c3 = v_star_coords
+
+    # Calculate every [M @ Bt]_i row (= mu_i) individually (Ax = b problem)
+    for i in range(n):
+        Ni = gen_Ni(i,n,Z)
+
+        # Generate "A"
+        z_star = np.zeros(len(Ni), dtype=complex)
+        for idx,j in enumerate(Ni):
+            z_star[idx] = p_star[i] - p_star[j]
+
+        # Generate "b"
+        vi = c1 + c2 * np.real(p_star)[i] + c3 * np.imag(p_star)[i]
+
+        # Calculate x = \tilde mu_i by solving Ax = b with least squares.
+        # The system Ax = b may be under-, well-, or over-determined.
+        z_star_real = np.array([np.real(z_star), np.imag(z_star)])
+        vi_real = np.array([np.real(vi), np.imag(vi)])
+        mu_i_bar, _, _, _ = LA.lstsq(z_star_real, vi_real, rcond=None)
+        
+        # Generate mu_i
+        mu_i = np.zeros(n)
+        for idx, jn in enumerate(Ni):
+            mu_i[jn] = mu_i_bar[idx]
+        MBt[i,:] = mu_i
+    
+    return MBt
+            
 
 # -------------------------------------------------------------------------------------

@@ -36,8 +36,8 @@ from afc.simulators import AffineSimulator
 from afc.simulators import AffineComplexSimulator
 
 # Affine Formation Control utils
-from afc.utils import check_case, get_pt_parallel
-from afc.plots import COLORS
+from afc import check_case, get_pt_parallel, gen_MBt, COLORS
+from afc.math import toComplex
 
 # -------------------------------------------------------------------------------------
 

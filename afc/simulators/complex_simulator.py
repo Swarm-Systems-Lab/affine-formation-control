@@ -10,7 +10,7 @@ from ssl_pysimutils import debug_eig
 
 from .simulator import Simulator
 from ..math.common import gen_edges_set, gen_Ni, gen_inc_matrix
-from ..math.complex import gen_weights, gen_laplacian, gen_compnts_matrix
+from ..math.complex_lap import gen_weights, gen_laplacian, gen_compnts_matrix
 from ..plots import plot_xy
 
 
@@ -24,7 +24,7 @@ def toComplex(array: np.ndarray):
         return array[:, 0] + array[:, 1] * 1j
 
 
-########################################################################################
+#######################################################################################
 
 
 class ComplexSimulator(Simulator):
@@ -139,8 +139,6 @@ class ComplexSimulator(Simulator):
         
         print("\n -> L_mod")
         debug_eig(np.array(-self.h * self.L_mod), eigenvectors, *prec[1:])
-
-
 
 
 #######################################################################################

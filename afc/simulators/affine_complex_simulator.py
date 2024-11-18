@@ -9,20 +9,9 @@ from tqdm import tqdm
 from ssl_pysimutils import debug_eig
 
 from .simulator import Simulator
-from ..math.common import gen_edges_set, gen_inc_matrix, gen_projectors
-from ..math.affine import gen_weights_rm, gen_weights_r, gen_compnts_matrix
+from ..math.common import gen_edges_set, gen_inc_matrix, gen_projectors, toComplex, toReal
+from ..math.real_lap import gen_weights_rm, gen_weights_r, gen_compnts_matrix
 from ..plots import plot_xy
-
-
-def toComplex(array: np.ndarray):
-    """
-    2 dimensional numpy array to complex
-    """
-    if isinstance(array.flatten()[0], complex):
-        return array
-    else:
-        return array[:, 0] + array[:, 1] * 1j
-
 
 #######################################################################################
 
@@ -43,8 +32,8 @@ class AffineComplexSimulator(Simulator):
         self.E = gen_edges_set(Z)
 
         # Set the desired formation and calculate the projection matrices
-        self.p_star = np.array(p_star)
-        self.p_star_c = toComplex(np.copy(self.p_star))
+        self.p_star = toReal(np.array(p_star))
+        self.p_star_c = toComplex(np.array(p_star))
 
         basis_S = [np.ones(self.n), np.real(self.p_star_c), np.imag(self.p_star_c)]
         self.Ps, self.Psp = gen_projectors(basis_S)
@@ -82,9 +71,10 @@ class AffineComplexSimulator(Simulator):
         # for debugging
         self.mu_matrix = mu_matrix
 
-    def numerical_simulation(self):
+    def numerical_simulation(self, reset=True):
         # Reset the simulator
-        self.reset()
+        if reset:
+            self.reset()
         self.state_dynamics = self.control_single_integrator
 
         # Numerical simulation
@@ -97,10 +87,10 @@ class AffineComplexSimulator(Simulator):
             self.update_data()
 
     ## Provide data to plot -----------------------------------------------------------
-    def plot(self, ax_input=None, lim=20, alpha1=1, alpha2=1):
+    def plot(self, ax_input=None, lim=20, alpha1=1, alpha2=1, colored=True, tail=True):
         xdata = np.real(self.data["x"])
         ydata = np.imag(self.data["x"])
-        plot_xy(xdata, ydata, self.Z, ax_input, lim, alpha1, alpha2)
+        plot_xy(xdata, ydata, self.Z, ax_input, lim, alpha1, alpha2, colored, tail)
             
     ## Debugging Functions ------------------------------------------------------------
     def check_W_L(self, eigenvectors=True, prec=[2, 8, 3]):

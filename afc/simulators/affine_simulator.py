@@ -10,8 +10,8 @@ from ssl_pysimutils import debug_eig
 
 from .simulator import Simulator
 from ..math.common import gen_edges_set, gen_Ni, gen_inc_matrix
-from ..math.affine import rot_transf_from_ang, sh_transf_x, sh_transf_y, rot_mat
-from ..math.affine import gen_weights_rm, gen_weights_r, gen_compnts_matrix
+from ..math.real_lap import rot_transf_from_ang, sh_transf_x, sh_transf_y, rot_mat
+from ..math.real_lap import gen_weights_rm, gen_weights_r, gen_compnts_matrix
 from ..plots import plot_xy
 
 

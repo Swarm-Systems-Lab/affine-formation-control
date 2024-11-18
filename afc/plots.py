@@ -18,6 +18,8 @@ def plot_xy(
     lim: float = 20,
     alpha1: float =1,
     alpha2: float = 1,
+    colored: bool = True,
+    tail: bool = True,
 ):
     # Create a new figure if an axis is not provided
     if ax_input is None:
@@ -34,9 +36,14 @@ def plot_xy(
     # Plot the XY simulation data
 
     for i in range(xdata.shape[1]):
-        ax.plot(xdata[:, i], ydata[:, i], "-", c=COLORS[i], lw=0.8, alpha=alpha1)
-        ax.plot(xdata[0, i], ydata[0, i], "x", c=COLORS[i])
-        ax.plot(xdata[-1, i], ydata[-1, i], ".", c=COLORS[i], label=(i + 1))
+        if colored:
+            color = COLORS[i % len(COLORS)]
+        else:
+            color = "royalblue"
+        ax.plot(xdata[0, i], ydata[0, i], "x", c=color)
+        ax.plot(xdata[-1, i], ydata[-1, i], ".", c=color, label=(i + 1))
+        if tail:
+            ax.plot(xdata[:, i], ydata[:, i], "-", c=color, lw=0.8, alpha=alpha1)
 
     # Plot the graph connections
     for edge in Z:

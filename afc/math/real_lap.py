@@ -8,7 +8,7 @@ import itertools
 import picos as pic  # version 1.2.0 !!
 from scipy import linalg as la
 
-## -------------------------------------------------------------------------------------
+## ------------------------------------------------------------------------------------
 
 
 def rot_mat(z):
@@ -34,7 +34,7 @@ def sh_transf_y(n, t):
     return np.kron(np.eye(n), np.array([[1, np.sinh(t)], [0, 1]]))
 
 
-## AFFINE FORMATIONS math tools - Real Laplacian ---------------------------------------
+## AFFINE FORMATIONS math tools - Real Laplacian --------------------------------------
 
 
 def gen_compnts_matrix(n, m, Z, mu_matrix):
@@ -173,5 +173,4 @@ def gen_laplacian(n, m, W, N_list):
                 L[i * m : (i + 1) * m, j * m : (j + 1) * m] = la
     return L
 
-
-# --------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
