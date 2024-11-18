@@ -5,3 +5,4 @@ __pycache__/
 
 # Tmp, output and model folders
 output/
+tmp/
