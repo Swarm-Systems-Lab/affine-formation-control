@@ -20,6 +20,7 @@ def plot_xy(
     alpha2: float = 1,
     colored: bool = True,
     tail: bool = True,
+    lw_net: float = 0.8,
 ):
     # Create a new figure if an axis is not provided
     if ax_input is None:
@@ -53,7 +54,7 @@ def plot_xy(
             [ydata[-1, i], ydata[-1, j]],
             "--",
             c="grey",
-            lw=0.8,
+            lw=lw_net,
             alpha=alpha2
         )
 

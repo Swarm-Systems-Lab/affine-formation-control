@@ -9,7 +9,8 @@ from tqdm import tqdm
 from ssl_pysimutils import debug_eig
 
 from .simulator import Simulator
-from ..math.common import gen_edges_set, gen_inc_matrix, gen_projectors, toComplex, toReal
+from ..math.common import toComplex, toReal
+from ..math.common import gen_edges_set, gen_inc_matrix, gen_projectors
 from ..math.real_lap import gen_weights_rm, gen_weights_r, gen_compnts_matrix
 from ..plots import plot_xy
 
@@ -87,10 +88,10 @@ class AffineComplexSimulator(Simulator):
             self.update_data()
 
     ## Provide data to plot -----------------------------------------------------------
-    def plot(self, ax_input=None, lim=20, alpha1=1, alpha2=1, colored=True, tail=True):
+    def plot(self, ax_input=None, lim=20, alpha1=1, alpha2=1, colored=True, tail=True, lw_net=0.8):
         xdata = np.real(self.data["x"])
         ydata = np.imag(self.data["x"])
-        plot_xy(xdata, ydata, self.Z, ax_input, lim, alpha1, alpha2, colored, tail)
+        plot_xy(xdata, ydata, self.Z, ax_input, lim, alpha1, alpha2, colored, tail, lw_net)
             
     ## Debugging Functions ------------------------------------------------------------
     def check_W_L(self, eigenvectors=True, prec=[2, 8, 3]):
