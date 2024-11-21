@@ -163,7 +163,7 @@ def get_pt_parallel(
         ) 
     
     # C2
-    if id_case in [2,3]: # TODO: fix
+    if id_case in [2,3]:
         l = l1
         axy = (ax + ay) / 2
 
@@ -200,13 +200,14 @@ def get_pt_parallel(
         )
 
     # C4
-    if id_case == 5: # TODO: Check
+    if id_case == 5:
         if l1 != 0:
             l = l1
         else:
             l = l2
         
         x0_1 = kappa * (vx + 1j * vy) * np.ones(n)
+        x0_1 = - kappa * (ax*vy - vx*(hy+omega)) * np.ones(n)
         x0_2 = hyw * ps_x - ax * ps_y
 
         c3_l = l/kappa - ax
@@ -229,13 +230,9 @@ def get_pt_parallel(
             x0_1 = kappa * (vx * np.ones(n) + (hx - omega) * ps_y)
             x0_2 = ps_x
             y0 = (hx - omega) * np.ones(n) - vx * ps_y
-        if id_case == 8:
-            x0_1 = kappa * vx * np.ones(n)
-            x0_2 = (vx - vy) * ps_x + vx * ps_y
-            y0 = vy * ps_x - vx * ps_y
-        if id_case == 9:
-            x0_1 = kappa * vy * np.ones(n)
-            x0_2 = vy * ps_x + (vy - vx) * ps_y
+        if id_case == 8 or id_case == 9:
+            x0_1 = kappa * (vx + vy) * np.ones(n)
+            x0_2 = vx * ps_x + vy * ps_y
             y0 = vy * ps_x - vx * ps_y
 
         return (
