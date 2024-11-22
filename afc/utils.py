@@ -231,8 +231,8 @@ def get_pt_parallel(
             x0_2 = ps_x
             y0 = (hx - omega) * np.ones(n) - vx * ps_y
         if id_case == 8 or id_case == 9:
-            x0_1 = kappa * (vx + vy) * np.ones(n)
-            x0_2 = vx * ps_x + vy * ps_y
+            x0_1 = kappa * (vx + 1j*vy) * np.ones(n)
+            x0_2 = vx * ps_x + 1j*vy * ps_y
             y0 = vy * ps_x - vx * ps_y
 
         return (
