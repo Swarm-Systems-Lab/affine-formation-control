@@ -23,6 +23,7 @@ import matplotlib.patches as patches
 # Swarm Systems Lab PySimUtils
 from ssl_pysimutils import createDir, set_paper_parameters, config_data_axis
 from ssl_pysimutils import unit_vec
+from ssl_pysimutils import vector2d
 
 # Python project directory to path (to import afc)
 file_path = os.path.dirname(__file__)
