@@ -16,6 +16,7 @@ from ..plots import plot_xy
 
 #######################################################################################
 
+__all__ = ["AffineComplexSimulator"]
 
 class AffineComplexSimulator(Simulator):
     def __init__(self, Z, p_star, p0, tf, dt=0.001, K=None, kappa=1, h=1):

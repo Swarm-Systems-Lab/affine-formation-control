@@ -5,8 +5,9 @@
 import numpy as np
 import itertools
 
-## COMPLEX math tools - Complex Laplacian ----------------------------------------------
+__all__ = ["gen_compnts_matrix", "gen_weights", "gen_laplacian"]
 
+## COMPLEX_LAP math tools - Complex Laplacian #########################################
 
 def gen_compnts_matrix(n, Z, mu_matrix):
     """
@@ -63,4 +64,4 @@ def gen_laplacian(n, W, N_list):
     return L
 
 
-# --------------------------------------------------------------------------------------
+#######################################################################################

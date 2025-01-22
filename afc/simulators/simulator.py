@@ -12,6 +12,7 @@ def dyn_func(p: np.ndarray, dyn_args):
 
 #######################################################################################
 
+__all__ = ["Simulator"]
 
 class Simulator:
     def __init__(
@@ -57,3 +58,5 @@ class Simulator:
         # Integrate
         self.sim_variables["t"] = self.sim_variables["t"] + self.dt
         self.sim_variables["x"] = self.sim_variables["x"] + x_dot * self.dt
+
+#######################################################################################

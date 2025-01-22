@@ -31,14 +31,16 @@ module_path = os.path.join(file_path, "..")
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-# Affine Formation Control simulators
-from afc.simulators import ComplexSimulator
-from afc.simulators import AffineSimulator
-from afc.simulators import AffineComplexSimulator
+# # Affine Formation Control simulators
+# from afc.simulators import ComplexSimulator
+# from afc.simulators import AffineSimulator
+# from afc.simulators import AffineComplexSimulator
 
-# Affine Formation Control utils
-from afc import check_case, get_pt_parallel, gen_MBt, COLORS
-from afc.math import toComplex
+# # Affine Formation Control utils
+# from afc import check_case, get_pt_parallel, gen_MBt, COLORS
+# from afc.math import toComplex
+
+import afc
 
 # -------------------------------------------------------------------------------------
 

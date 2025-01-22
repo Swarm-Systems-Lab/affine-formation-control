@@ -27,6 +27,7 @@ def check_p_dim(p):
 
 #######################################################################################
 
+__all__ = ["AffineSimulator"]
 
 class AffineSimulator(Simulator):
     def __init__(

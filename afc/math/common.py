@@ -7,6 +7,9 @@ import numpy as np
 from numpy.typing import NDArray
 from typing import List, Tuple
 
+__all__ = ["toComplex", "toReal", "gen_projectors", 
+           "gen_Ni", "gen_edges_set", "gen_inc_matrix"]
+
 ## COMMON math tools ##################################################################
 
 ## General Use ------------------------------------------------------------------------

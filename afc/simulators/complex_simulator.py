@@ -26,6 +26,7 @@ def toComplex(array: np.ndarray):
 
 #######################################################################################
 
+__all__ = ["ComplexSimulator"]
 
 class ComplexSimulator(Simulator):
     def __init__(self, Z, p_star, p0, tf, dt=0.001, K=None, kappa=1, h=1, p1=(1+2j)):
