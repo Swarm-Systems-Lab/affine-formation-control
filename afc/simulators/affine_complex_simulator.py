@@ -6,7 +6,7 @@ import numpy as np
 import numpy.linalg as LA
 from tqdm import tqdm
 
-from ssl_pysimutils import debug_eig
+from ssl_simulator import debug_eig
 
 from .simulator import Simulator
 from ..math.common import toComplex, toReal

@@ -266,7 +266,7 @@ def get_pt_parallel(
 
 def gen_MBt(
     Z: Set[Set[int]],  # Each set contains 2 int elements (head, tail)
-    p_star: NDArray[np.complex_], # 1D array with shape n = to the number of agents
+    p_star: NDArray[np.complex128], # 1D array with shape n = to the number of agents
     v_star_coords: List[complex]  # c1, c2 and c3 w.r.t. O_\Delta
 ) -> NDArray:
     
