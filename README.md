@@ -33,4 +33,6 @@ For an overview of the project's structure and to see the code in action, we rec
 
 ## Credits
 
-This repository is maintained by [Jesús Bautista Villar](https://sites.google.com/view/jbautista-research). For inquiries, suggestions, or further information, feel free to contact him at <jesbauti20@gmail.com>.
+If you have any questions, open an issue or reach out to the maintainers:
+
+- **[Jesús Bautista Villar](https://sites.google.com/view/jbautista-research)** (<jesbauti20@gmail.com>) – Main Developer
